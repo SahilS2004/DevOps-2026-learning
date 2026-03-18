@@ -12,23 +12,28 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
+
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    
   ],
   webServer: [
+
     {
       command: 'cd ../server && npm run start',
       port: 5005,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
+
     {
       command: 'npm run dev',
       port: 5173,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     }
+
   ],
 });
