@@ -16,6 +16,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Book Routes
+app.use('/api/books', require('./routes/bookRoutes'));
+
 // Root Route (optional, just to show something)
 app.get('/', (req, res) => {
   res.send('ShopSmart Backend Service');
