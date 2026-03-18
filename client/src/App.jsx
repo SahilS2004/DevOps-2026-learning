@@ -7,10 +7,10 @@ function NavLinks() {
   const location = useLocation();
   return (
     <div className="nav-links">
-      <Link to="/" className="nav-link" data-active={location.pathname === "/"}>
+      <Link to="/" className="nav-link" data-active={location.pathname === '/'}>
         <Library size={20} /> Browse Library
       </Link>
-      <Link to="/admin" className="nav-link" data-active={location.pathname === "/admin"}>
+      <Link to="/admin" className="nav-link" data-active={location.pathname === '/admin'}>
         <LayoutDashboard size={20} /> Admin Panel
       </Link>
     </div>
@@ -32,7 +32,7 @@ function App() {
             <p>&copy; 2026 DevLibrary</p>
           </div>
         </aside>
-        
+
         <main className="main-content">
           <div className="content-wrapper">
             <Routes>

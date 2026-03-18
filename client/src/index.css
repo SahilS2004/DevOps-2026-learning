@@ -13,7 +13,11 @@
   --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   font-family: 'Outfit', sans-serif;
@@ -39,7 +43,7 @@ body {
   flex-direction: column;
   position: relative;
   z-index: 10;
-  box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .brand {
@@ -75,13 +79,14 @@ body {
   gap: 1rem;
 }
 
-.nav-link:hover, .nav-link[data-active="true"] {
+.nav-link:hover,
+.nav-link[data-active='true'] {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-dark);
   transform: translateX(5px);
 }
 
-.nav-link[data-active="true"] {
+.nav-link[data-active='true'] {
   background: rgba(59, 130, 246, 0.1);
   border-left: 4px solid var(--accent);
 }
@@ -110,7 +115,7 @@ body {
   right: -100px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
   z-index: 0;
   pointer-events: none;
@@ -123,7 +128,7 @@ body {
   left: -100px;
   width: 800px;
   height: 800px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
   z-index: 0;
   pointer-events: none;
@@ -160,7 +165,7 @@ h1.page-title span {
   background: var(--bg-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.8);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 20px;
   padding: 2rem;
   box-shadow: var(--shadow-sm);
@@ -179,7 +184,10 @@ h1.page-title span {
 .book-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; height: 4px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
   background: var(--accent-gradient);
   opacity: 0;
   transition: opacity 0.3s;
@@ -216,7 +224,7 @@ h1.page-title span {
   justify-content: space-between;
   align-items: center;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(0,0,0,0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .book-cost {
@@ -353,13 +361,23 @@ h1.page-title span {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* RESPONSIVE DESIGN */
@@ -368,7 +386,7 @@ h1.page-title span {
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
-  
+
   .admin-table-card {
     overflow-x: auto;
     width: 100%;
@@ -388,7 +406,7 @@ h1.page-title span {
   .sidebar {
     width: 100%;
     padding: 1.5rem 1.5rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     z-index: 20;
     flex-shrink: 0;
   }
@@ -432,7 +450,8 @@ h1.page-title span {
     padding: 1.5rem;
   }
 
-  .admin-table th, .admin-table td {
+  .admin-table th,
+  .admin-table td {
     padding: 1rem;
     font-size: 0.85rem;
   }

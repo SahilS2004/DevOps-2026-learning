@@ -5,7 +5,10 @@ export default function AdminPage() {
   const [books, setBooks] = useState([]);
   const [editingBook, setEditingBook] = useState(null);
   const [formData, setFormData] = useState({
-    book_name: '', book_author: '', book_publication: '', book_cost: ''
+    book_name: '',
+    book_author: '',
+    book_publication: '',
+    book_cost: '',
   });
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,8 +16,8 @@ export default function AdminPage() {
 
   const fetchBooks = () => {
     fetch(`${import.meta.env.VITE_API_URL}/books`)
-      .then(res => res.json())
-      .then(data => setBooks(data));
+      .then((res) => res.json())
+      .then((data) => setBooks(data));
   };
 
   useEffect(() => {
@@ -27,7 +30,7 @@ export default function AdminPage() {
       book_name: book.book_name,
       book_author: book.book_author,
       book_publication: book.book_publication,
-      book_cost: book.book_cost.toString()
+      book_cost: book.book_cost.toString(),
     });
     setFile(null);
   };
@@ -42,7 +45,7 @@ export default function AdminPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       if (editingBook) {
         // API 4: Update Existing Book
@@ -54,16 +57,16 @@ export default function AdminPage() {
 
         await fetch(`${import.meta.env.VITE_API_URL}/books/${editingBook.book_id}`, {
           method: 'PUT',
-          body: data
+          body: data,
         });
-        
+
         // API 3: Upload Book File (Optional on Edit)
         if (file) {
           const fileData = new FormData();
           fileData.append('book_file', file);
           await fetch(`${import.meta.env.VITE_API_URL}/books/${editingBook.book_id}/upload`, {
             method: 'POST',
-            body: fileData
+            body: fileData,
           });
         }
       } else {
@@ -76,22 +79,22 @@ export default function AdminPage() {
 
         const res = await fetch(`${import.meta.env.VITE_API_URL}/books`, {
           method: 'POST',
-          body: data
+          body: data,
         });
-        
+
         const newBook = await res.json();
-        
+
         // API 3: Upload Book File
         if (file) {
           const fileData = new FormData();
           fileData.append('book_file', file);
           await fetch(`${import.meta.env.VITE_API_URL}/books/${newBook.book_id}/upload`, {
             method: 'POST',
-            body: fileData
+            body: fileData,
           });
         }
       }
-      
+
       cancelEdit();
       fetchBooks();
     } catch (err) {
@@ -103,15 +106,37 @@ export default function AdminPage() {
 
   return (
     <div>
-      <h1 className="page-title">Dashboard <span>Overview</span></h1>
-      
+      <h1 className="page-title">
+        Dashboard <span>Overview</span>
+      </h1>
+
       <div className="admin-layout">
         {/* Left Form */}
         <div className="admin-form-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem',
+            }}
+          >
             <h2 style={{ margin: 0 }}>{editingBook ? 'Edit Book' : 'Add New Book'}</h2>
             {editingBook && (
-              <button type="button" onClick={cancelEdit} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: 600,
+                }}
+              >
                 <X size={16} /> Cancel
               </button>
             )}
@@ -119,32 +144,85 @@ export default function AdminPage() {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Book Title</label>
-              <input required type="text" className="form-input" placeholder="e.g. The Pragmatic Programmer" value={formData.book_name} onChange={e => setFormData({...formData, book_name: e.target.value})} />
+              <input
+                required
+                type="text"
+                className="form-input"
+                placeholder="e.g. The Pragmatic Programmer"
+                value={formData.book_name}
+                onChange={(e) => setFormData({ ...formData, book_name: e.target.value })}
+              />
             </div>
             <div className="form-group">
               <label>Author / Writer</label>
-              <input required type="text" className="form-input" placeholder="e.g. Andy Hunt" value={formData.book_author} onChange={e => setFormData({...formData, book_author: e.target.value})} />
+              <input
+                required
+                type="text"
+                className="form-input"
+                placeholder="e.g. Andy Hunt"
+                value={formData.book_author}
+                onChange={(e) => setFormData({ ...formData, book_author: e.target.value })}
+              />
             </div>
             <div className="form-group">
               <label>Publication</label>
-              <input required type="text" className="form-input" placeholder="e.g. Addison-Wesley" value={formData.book_publication} onChange={e => setFormData({...formData, book_publication: e.target.value})} />
+              <input
+                required
+                type="text"
+                className="form-input"
+                placeholder="e.g. Addison-Wesley"
+                value={formData.book_publication}
+                onChange={(e) => setFormData({ ...formData, book_publication: e.target.value })}
+              />
             </div>
             <div className="form-group">
               <label>Cost / Retail Price ($)</label>
-              <input required type="number" step="0.01" className="form-input" placeholder="29.99" value={formData.book_cost} onChange={e => setFormData({...formData, book_cost: e.target.value})} />
+              <input
+                required
+                type="number"
+                step="0.01"
+                className="form-input"
+                placeholder="29.99"
+                value={formData.book_cost}
+                onChange={(e) => setFormData({ ...formData, book_cost: e.target.value })}
+              />
             </div>
             <div className="form-group">
               <label>{editingBook ? 'Upload New PDF (Optional)' : 'Upload PDF Document'}</label>
-              <div style={{ border: '2px dashed #cbd5e1', padding: '2rem', textAlign: 'center', borderRadius: '12px', background: '#f8fafc', cursor: 'pointer', position: 'relative' }}>
-                <input ref={fileInputRef} type="file" required={!editingBook} onChange={e => setFile(e.target.files[0])} style={{ opacity: 0, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+              <div
+                style={{
+                  border: '2px dashed #cbd5e1',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  required={!editingBook}
+                  onChange={(e) => setFile(e.target.files[0])}
+                  style={{
+                    opacity: 0,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    cursor: 'pointer',
+                  }}
+                />
                 <UploadCloud size={32} color="#94a3b8" style={{ marginBottom: '0.5rem' }} />
                 <p style={{ color: '#475569', fontWeight: 500 }}>
-                  {file ? file.name : "Drag & Drop or Click to Browse"}
+                  {file ? file.name : 'Drag & Drop or Click to Browse'}
                 </p>
               </div>
             </div>
             <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? 'Processing...' : (editingBook ? 'Update Book' : 'Publish Book')}
+              {loading ? 'Processing...' : editingBook ? 'Update Book' : 'Publish Book'}
             </button>
           </form>
         </div>
@@ -162,14 +240,30 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {books.map(book => (
+              {books.map((book) => (
                 <tr key={book.book_id}>
-                  <td><strong>{book.book_name}</strong></td>
+                  <td>
+                    <strong>{book.book_name}</strong>
+                  </td>
                   <td>{book.book_author}</td>
-                  <td style={{ color: '#10b981', fontWeight: 700 }}>${book.book_cost ? book.book_cost.toFixed(2) : '0.00'}</td>
+                  <td style={{ color: '#10b981', fontWeight: 700 }}>
+                    ${book.book_cost ? book.book_cost.toFixed(2) : '0.00'}
+                  </td>
                   <td>
                     {book.book_link ? (
-                      <a href={book.book_link} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600 }}>
+                      <a
+                        href={book.book_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: '#3b82f6',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          textDecoration: 'none',
+                          fontWeight: 600,
+                        }}
+                      >
                         <FileText size={16} /> View
                       </a>
                     ) : (
@@ -177,7 +271,21 @@ export default function AdminPage() {
                     )}
                   </td>
                   <td>
-                    <button onClick={() => handleEdit(book)} style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#475569', fontWeight: 600 }}>
+                    <button
+                      onClick={() => handleEdit(book)}
+                      style={{
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: '#475569',
+                        fontWeight: 600,
+                      }}
+                    >
                       <Edit2 size={14} /> Edit
                     </button>
                   </td>
@@ -185,7 +293,10 @@ export default function AdminPage() {
               ))}
               {books.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                  <td
+                    colSpan="5"
+                    style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}
+                  >
                     Database is currently empty
                   </td>
                 </tr>
