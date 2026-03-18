@@ -1,29 +1,61 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
-    branches:
-      - "**"
   pull_request:
-    branches:
-      - "**"
 
 jobs:
-  build:
+  backend-ci:
+    name: Backend CI
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./server
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './server/package-lock.json'
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        
+      - name: Run Linter
+        run: npm run lint
+        
+      - name: Run Tests
+        run: npm run test
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './client/package-lock.json'
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Run Linter
+        run: npm run lint
+        
+      - name: Run Tests
+        # Vite's vitest automatically detects the GitHub Actions CI environment
+        # and runs in non-watch (single run) mode by default.
+        run: npm run test
