@@ -1,0 +1,50 @@
+name: AWS EC2 Continuous Deployment
+
+# Trigger deployment only on pushes to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Execute Deployment Scripts via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # These secrets must be defined in your GitHub Repository Settings!
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "🚀 Starting Deployment on AWS EC2..."
+            
+            # 1. Navigate to your cloned repository on the EC2 machine
+            # (Make sure to replace this path if you clone to a different folder!)
+            cd ~/DevOps-2026-learning
+            
+            # 2. Fetch the latest code we just pushed
+            git pull origin main
+            
+            # 3. Securely build and restart the Backend (Server)
+            echo "📦 Building Backend..."
+            cd server
+            npm ci
+            npx prisma generate
+            npx prisma db push --accept-data-loss
+            
+            # Restart PM2 process (assumes you started it earlier with pm2 start src/index.js --name "backend")
+            pm2 restart backend || pm2 start src/index.js --name "backend"
+            
+            # 4. Securely build the Frontend (Client)
+            echo "📦 Building Frontend..."
+            cd ../client
+            npm ci
+            npm run build
+            
+            # (If you serve the client using Nginx, adjusting the build folder is native and automatic)
+            
+            echo "✅ Deployment Successful!"

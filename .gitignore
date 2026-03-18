@@ -3,3 +3,5 @@ node_modules
 .env
 coverage
 .vercel
+*.db
+*.db-journal
