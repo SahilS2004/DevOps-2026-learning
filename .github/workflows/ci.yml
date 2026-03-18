@@ -72,10 +72,13 @@ jobs:
           node-version: '20.x'
           
       - name: Install Server Dependencies
+        env:
+          DATABASE_URL: "file:./dev.db"
         run: |
           cd server
           npm ci
           npx prisma generate
+          npx prisma db push --accept-data-loss
           
       - name: Install Client Dependencies
         run: |
@@ -88,6 +91,10 @@ jobs:
           npx playwright install --with-deps chromium
           
       - name: Run Playwright E2E
+        env:
+          PORT: 5005
+          DATABASE_URL: "file:./dev.db"
+          VITE_API_URL: "http://localhost:5005/api"
         run: |
           cd client
           npm run e2e

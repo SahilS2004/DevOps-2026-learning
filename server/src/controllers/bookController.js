@@ -6,7 +6,7 @@ const { isMock } = require('../config/s3');
 exports.getBooks = async (req, res) => {
   try {
     const books = await prisma.book.findMany({
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: 'desc' },
     });
     res.json(books);
   } catch (error) {
@@ -25,10 +25,10 @@ exports.addBook = async (req, res) => {
         book_author,
         book_publication,
         book_cost: parseFloat(book_cost) || 0,
-        book_link: ''
-      }
+        book_link: '',
+      },
     });
-    
+
     res.status(201).json(book);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -40,7 +40,7 @@ exports.updateBook = async (req, res) => {
   try {
     const { id } = req.params;
     const { book_name, book_author, book_publication, book_cost } = req.body;
-    
+
     const updateData = {};
     if (book_name !== undefined) updateData.book_name = book_name;
     if (book_author !== undefined) updateData.book_author = book_author;
@@ -49,7 +49,7 @@ exports.updateBook = async (req, res) => {
 
     const book = await prisma.book.update({
       where: { book_id: parseInt(id) },
-      data: updateData
+      data: updateData,
     });
 
     res.json(book);
@@ -62,9 +62,9 @@ exports.updateBook = async (req, res) => {
 exports.uploadBookFile = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     if (!req.file) {
-       return res.status(400).json({ error: "No file provided" });
+      return res.status(400).json({ error: 'No file provided' });
     }
 
     let book_link = '';
@@ -76,7 +76,7 @@ exports.uploadBookFile = async (req, res) => {
 
     const book = await prisma.book.update({
       where: { book_id: parseInt(id) },
-      data: { book_link }
+      data: { book_link },
     });
 
     res.json(book);

@@ -8,11 +8,11 @@ describe('API + DB System Integration', () => {
 
   beforeAll(async () => {
     // 1. Override the database URL strictly to a dedicated testing file to avoid corrupting main dev.db
-    process.env.DATABASE_URL = "file:./integration-test.db";
-    
+    process.env.DATABASE_URL = 'file:./integration-test.db';
+
     // 2. Synchronize the Prisma schema strictly to the dedicated SQLite testing database
     execSync('npx prisma db push --accept-data-loss', { stdio: 'ignore' });
-    
+
     prisma = new PrismaClient();
     await prisma.book.deleteMany();
   });
@@ -38,14 +38,14 @@ describe('API + DB System Integration', () => {
 
     expect(createRes.statusCode).toBe(201);
     expect(createRes.body.book_id).toBeDefined();
-    
+
     const bookId = createRes.body.book_id;
 
     // STEP B: Upload a mock file via the API module to trigger the S3 hook and DB update
     const uploadRes = await request(app)
       .post(`/api/books/${bookId}/upload`)
       .attach('book_file', Buffer.from('mock pdf binary content'), 'architecture.pdf');
-    
+
     expect(uploadRes.statusCode).toBe(200);
     expect(typeof uploadRes.body.book_link).toBe('string');
     expect(uploadRes.body.book_link.length).toBeGreaterThan(0);
@@ -54,8 +54,8 @@ describe('API + DB System Integration', () => {
     const getRes = await request(app).get('/api/books');
     expect(getRes.statusCode).toBe(200);
     expect(getRes.body.length).toBe(1);
-    
-    // Assert the stored constraints match our original submission 
+
+    // Assert the stored constraints match our original submission
     const storedBook = getRes.body[0];
     expect(storedBook.book_name).toBe('System Architecture');
     expect(storedBook.book_author).toBe('Alan Turing');
