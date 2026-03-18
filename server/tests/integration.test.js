@@ -14,6 +14,7 @@ describe('API + DB System Integration', () => {
     execSync('npx prisma db push --accept-data-loss', { stdio: 'ignore' });
     
     prisma = new PrismaClient();
+    await prisma.book.deleteMany();
   });
 
   afterAll(async () => {
