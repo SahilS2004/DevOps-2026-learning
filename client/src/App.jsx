@@ -24,12 +24,12 @@ function App() {
         <aside className="sidebar">
           <div>
             <div className="brand">
-              <Book size={32} color="#38bdf8" /> DevLib.
+              <Book size={32} color="#38bdf8" /> DevLibrary
             </div>
             <NavLinks />
           </div>
           <div className="sidebar-footer">
-            <p>&copy; 2026 Dev Libraries App</p>
+            <p>&copy; 2026 DevLibrary</p>
           </div>
         </aside>
         
