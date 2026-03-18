@@ -59,3 +59,35 @@ jobs:
         # Vite's vitest automatically detects the GitHub Actions CI environment
         # and runs in non-watch (single run) mode by default.
         run: npm run test
+
+  e2e-ci:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          
+      - name: Install Server Dependencies
+        run: |
+          cd server
+          npm ci
+          npx prisma generate
+          
+      - name: Install Client Dependencies
+        run: |
+          cd client
+          npm ci
+          
+      - name: Install Playwright Browsers
+        run: |
+          cd client
+          npx playwright install --with-deps chromium
+          
+      - name: Run Playwright E2E
+        run: |
+          cd client
+          npm run e2e
