@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { UploadCloud, FileText, Edit2, X } from 'lucide-react';
+import { UploadCloud, FileText, Edit2, X, Trash2 } from 'lucide-react';
 
 export default function AdminPage() {
   const [books, setBooks] = useState([]);
@@ -102,6 +102,17 @@ export default function AdminPage() {
       alert('Failed to process book');
     }
     setLoading(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this book?')) return;
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/books/${id}`, { method: 'DELETE' });
+      fetchBooks();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete book');
+    }
   };
 
   return (
@@ -271,23 +282,42 @@ export default function AdminPage() {
                     )}
                   </td>
                   <td>
-                    <button
-                      onClick={() => handleEdit(book)}
-                      style={{
-                        background: '#f1f5f9',
-                        border: '1px solid #cbd5e1',
-                        padding: '0.4rem 0.8rem',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        color: '#475569',
-                        fontWeight: 600,
-                      }}
-                    >
-                      <Edit2 size={14} /> Edit
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleEdit(book)}
+                        style={{
+                          background: '#f1f5f9',
+                          border: '1px solid #cbd5e1',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          color: '#475569',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(book.book_id)}
+                        style={{
+                          background: '#fef2f2',
+                          border: '1px solid #fecaca',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          color: '#ef4444',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -84,3 +84,16 @@ exports.uploadBookFile = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// 5. Delete Book
+exports.deleteBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.book.delete({
+      where: { book_id: parseInt(id) },
+    });
+    res.json({ message: 'Book deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

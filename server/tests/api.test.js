@@ -9,6 +9,7 @@ jest.mock('@prisma/client', () => {
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
   };
   return { PrismaClient: jest.fn(() => mPrismaClient) };
@@ -63,6 +64,18 @@ describe('Book API Endpoints Unit Tests', () => {
     expect(mPrisma.book.update).toHaveBeenCalledWith({
       where: { book_id: 1 },
       data: { book_name: 'Updated Book' },
+    });
+  });
+
+  it('DELETE /api/books/:id should return 200 and delete the book', async () => {
+    mPrisma.book.delete.mockResolvedValue({ book_id: 1 });
+
+    const res = await request(app).delete('/api/books/1');
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toEqual('Book deleted successfully');
+    expect(mPrisma.book.delete).toHaveBeenCalledWith({
+      where: { book_id: 1 },
     });
   });
 });

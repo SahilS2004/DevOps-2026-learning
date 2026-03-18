@@ -15,4 +15,7 @@ router.post('/:id/upload', upload.single('book_file'), bookController.uploadBook
 // 4. Update existing book metadata
 router.put('/:id', upload.none(), bookController.updateBook);
 
+// 5. Delete book
+router.delete('/:id', bookController.deleteBook);
+
 module.exports = router;
