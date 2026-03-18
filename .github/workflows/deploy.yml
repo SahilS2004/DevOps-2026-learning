@@ -1,5 +1,6 @@
 name: AWS EC2 Continuous Deployment
 
+
 # Trigger deployment only on pushes to the main branch
 on:
   push:
