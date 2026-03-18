@@ -25,12 +25,21 @@ jobs:
             
             cd ~/DevOps-2026-learning
             
-            # Avoid conflict with dev.db by ensuring we don't try to pull it if it's there
-            git checkout .github/ # Ensure we have the latest workflow logic safely
+            # 1. Safety Backup: Prevent dev.db from being deleted during the git reset
+            echo "💾 Backing up database..."
+            cp server/prisma/dev.db server/prisma/dev.db.bak || true
+            
+            # 2. Force-sync with the latest repository state
             git fetch origin main
             git reset --hard origin/main
             
-            # 3. Securely build and restart the Backend (Server)
+            # 3. Restore the database if it was removed during sync
+            if [ -f server/prisma/dev.db.bak ]; then
+              echo "🩹 Restoring database..."
+              mv server/prisma/dev.db.bak server/prisma/dev.db
+            fi
+            
+            # 4. Securely build and restart the Backend (Server)
             echo "📦 Building Backend..."
             cd server
             npm ci
