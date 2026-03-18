@@ -20,14 +20,15 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e # Exit immediately if any command fails
             echo "🚀 Starting Deployment on AWS EC2..."
             
-            # 1. Navigate to your cloned repository on the EC2 machine
-            # (Make sure to replace this path if you clone to a different folder!)
             cd ~/DevOps-2026-learning
             
-            # 2. Fetch the latest code we just pushed
-            git pull origin main
+            # Avoid conflict with dev.db by ensuring we don't try to pull it if it's there
+            git checkout .github/ # Ensure we have the latest workflow logic safely
+            git fetch origin main
+            git reset --hard origin/main
             
             # 3. Securely build and restart the Backend (Server)
             echo "📦 Building Backend..."
