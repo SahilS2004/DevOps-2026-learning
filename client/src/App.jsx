@@ -25,6 +25,7 @@ function App() {
           <div>
             <div className="brand">
               <Book size={32} color="#38bdf8" /> DevLibrary
+              <p>by - Sahil Sarawgi</p>
             </div>
             <NavLinks />
           </div>
