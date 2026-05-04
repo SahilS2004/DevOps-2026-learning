@@ -32,26 +32,6 @@ resource "aws_s3_bucket_public_access_block" "public_block" {
   restrict_public_buckets = true
 }
 
-# 5. Wildcard Public Bucket Policy for evaluation / open read-write
-resource "aws_s3_bucket_policy" "public_read_write" {
-  bucket = aws_s3_bucket.library_bucket.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadWrite"
-        Effect    = "Allow"
-        Principal = "*"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject"
-        ]
-        Resource = "${aws_s3_bucket.library_bucket.arn}/*"
-      }
-    ]
-  })
-}
-
 # Output definitions
 output "s3_bucket_name" {
   value       = aws_s3_bucket.library_bucket.id
