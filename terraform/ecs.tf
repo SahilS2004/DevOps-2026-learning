@@ -13,27 +13,9 @@ resource "aws_ecs_cluster" "main" {
   name = "shopsmart-cluster"
 }
 
-# IAM Role for ECS Task Execution
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "shopsmart-ecs-task-execution-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+# Fetch existing LabRole provided by AWS Academy
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
 }
 
 # CloudWatch Log Group
@@ -49,8 +31,8 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
+  task_role_arn            = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([
     {
