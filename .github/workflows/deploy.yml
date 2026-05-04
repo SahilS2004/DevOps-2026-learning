@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Phase 1 - Testing
+    name: Testing
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install & Run Server Tests
         run: |
@@ -34,9 +33,63 @@ jobs:
           npm ci
           npm run test
 
+  terraform:
+    name: Terraform Apply
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          cd terraform
+          terraform init
+          terraform validate
+          terraform plan
+          terraform apply -auto-approve
+
+  ecs_deployment:
+    name: ECS Deployment
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: "shopsmart-server"
+          IMAGE_TAG: "latest"
+        run: |
+          # Build a docker container and push it to ECR so that it can be deployed to ECS
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
   deploy:
     name: Deploy to Production
-    needs: test
+    needs: terraform
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +105,7 @@ jobs:
             
             cd ~/DevOps-2026-learning
             
-            # 1. Safety Backup
+            # 1. Safety Backup: Prevent dev.db from being deleted during the git reset
             echo "💾 Backing up database..."
             cp server/prisma/dev.db server/prisma/dev.db.bak || true
             
@@ -60,7 +113,7 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             
-            # 3. Restore the database
+            # 3. Restore the database if it was removed during sync
             if [ -f server/prisma/dev.db.bak ]; then
               echo "🩹 Restoring database..."
               mv server/prisma/dev.db.bak server/prisma/dev.db
@@ -73,13 +126,15 @@ jobs:
             npx prisma generate
             npx prisma db push --accept-data-loss
             
-            # Restart PM2 process
+            # Restart PM2 process (assumes you started it earlier with pm2 start src/index.js --name "backend")
             pm2 restart backend || pm2 start src/index.js --name "backend"
             
-            # 5. Securely build the Frontend (Client)
+            # 4. Securely build the Frontend (Client)
             echo "📦 Building Frontend..."
             cd ../client
             npm ci
             npm run build
+            
+            # (If you serve the client using Nginx, adjusting the build folder is native and automatic)
             
             echo "✅ Deployment Successful!"
