@@ -4,6 +4,10 @@ on:
     branches:
       - main
       - developed
+  pull_request:
+    branches:
+      - main
+      - developed
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -13,6 +17,22 @@ jobs:
   test:
     name: Phase 1 - Testing
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: shopsmart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -23,6 +43,8 @@ jobs:
           node-version: 20
 
       - name: Install & Run Server Tests
+        env:
+          DATABASE_URL: postgresql://postgres:password123@localhost:5432/shopsmart
         run: |
           cd server
           npm ci

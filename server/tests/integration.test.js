@@ -7,8 +7,10 @@ describe('API + DB System Integration', () => {
   let prisma;
 
   beforeAll(async () => {
-    // 1. Override the database URL strictly to a dedicated testing file to avoid corrupting main dev.db
-    process.env.DATABASE_URL = 'file:./integration-test.db';
+    // 1. Fallback to local postgres test database if DATABASE_URL is not set by CI
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = 'postgresql://postgres:password123@localhost:5432/shopsmart';
+    }
 
     // 2. Synchronize the Prisma schema strictly to the dedicated SQLite testing database
     execSync('npx prisma db push --accept-data-loss', { stdio: 'ignore' });
