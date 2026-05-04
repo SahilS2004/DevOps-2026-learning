@@ -25,6 +25,7 @@ ENV NODE_ENV=production
 
 EXPOSE 5005
 
+
 # Healthcheck configuration
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:5005/api/health', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1))"
