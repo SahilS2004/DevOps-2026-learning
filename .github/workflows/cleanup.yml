@@ -1,0 +1,62 @@
+name: Manual AWS Cleanup
+
+on:
+  workflow_dispatch:
+    # This ensures the workflow only runs when manually triggered from the GitHub Actions UI
+
+jobs:
+  cleanup:
+    name: Clean Orphaned AWS Resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Delete Orphaned S3 Bucket
+        run: |
+          echo "Attempting to delete S3 bucket dev-lib-ops-1..."
+          aws s3 rb s3://dev-lib-ops-1 --force || echo "Bucket not found or already deleted."
+
+      - name: Delete Orphaned ECR Repository
+        run: |
+          echo "Attempting to delete ECR repository shopsmart-app..."
+          aws ecr delete-repository --repository-name shopsmart-app --force || echo "Repository not found or already deleted."
+
+      - name: Delete Orphaned CloudWatch Log Group
+        run: |
+          echo "Attempting to delete CloudWatch log group /ecs/shopsmart-app..."
+          aws logs delete-log-group --log-group-name /ecs/shopsmart-app || echo "Log group not found or already deleted."
+
+      - name: Delete Orphaned EFS File System
+        run: |
+          echo "Looking for EFS file system with creation token shopsmart-sqlite-efs..."
+          EFS_ID=$(aws efs describe-file-systems --creation-token shopsmart-sqlite-efs --query "FileSystems[0].FileSystemId" --output text 2>/dev/null || echo "None")
+          
+          if [ "$EFS_ID" != "None" ] && [ "$EFS_ID" != "null" ]; then
+            echo "Found EFS File System: $EFS_ID. Fetching mount targets..."
+            MT_IDS=$(aws efs describe-mount-targets --file-system-id $EFS_ID --query "MountTargets[*].MountTargetId" --output text 2>/dev/null)
+            
+            for MT in $MT_IDS; do
+              echo "Deleting mount target: $MT"
+              aws efs delete-mount-target --mount-target-id $MT || true
+            done
+            
+            if [ -n "$MT_IDS" ]; then
+              echo "Waiting 30 seconds for mount targets to fully detach and delete..."
+              sleep 30
+            fi
+            
+            echo "Deleting EFS File System..."
+            aws efs delete-file-system --file-system-id $EFS_ID || echo "Failed to delete EFS (may require more time for mount targets to vanish)."
+          else
+            echo "EFS File System not found or already deleted."
+          fi
+          
+      - name: Terraform Destroy (Optional Fallback)
+        run: |
+          echo "Cleanup complete! If you have state bucket issues, you can run terraform destroy later."
