@@ -1,22 +1,48 @@
 name: AWS EC2 Continuous Deployment
 
-
-# Trigger deployment only on pushes to the main branch
 on:
   push:
     branches:
       - main
+      - developed
 
 jobs:
+  test:
+    name: Phase 1 - Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install & Run Server Tests
+        run: |
+          cd server
+          npm ci
+          npx prisma generate
+          npm run test
+
+      - name: Install & Run Client Tests
+        run: |
+          cd client
+          npm ci
+          npm run test
+
   deploy:
     name: Deploy to Production
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
       - name: Execute Deployment Scripts via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          # These secrets must be defined in your GitHub Repository Settings!
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
@@ -26,7 +52,7 @@ jobs:
             
             cd ~/DevOps-2026-learning
             
-            # 1. Safety Backup: Prevent dev.db from being deleted during the git reset
+            # 1. Safety Backup
             echo "💾 Backing up database..."
             cp server/prisma/dev.db server/prisma/dev.db.bak || true
             
@@ -34,7 +60,7 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             
-            # 3. Restore the database if it was removed during sync
+            # 3. Restore the database
             if [ -f server/prisma/dev.db.bak ]; then
               echo "🩹 Restoring database..."
               mv server/prisma/dev.db.bak server/prisma/dev.db
@@ -47,15 +73,13 @@ jobs:
             npx prisma generate
             npx prisma db push --accept-data-loss
             
-            # Restart PM2 process (assumes you started it earlier with pm2 start src/index.js --name "backend")
+            # Restart PM2 process
             pm2 restart backend || pm2 start src/index.js --name "backend"
             
-            # 4. Securely build the Frontend (Client)
+            # 5. Securely build the Frontend (Client)
             echo "📦 Building Frontend..."
             cd ../client
             npm ci
             npm run build
-            
-            # (If you serve the client using Nginx, adjusting the build folder is native and automatic)
             
             echo "✅ Deployment Successful!"
