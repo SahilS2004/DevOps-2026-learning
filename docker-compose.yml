@@ -10,8 +10,24 @@ services:
       - "5005:5005"
     environment:
       - PORT=5005
-      - NODE_ENV=production
-      # Add other necessary env variables like AWS_REGION, S3_BUCKET_NAME etc.
-    volumes:
-      - ./server/prisma/dev.db:/app/server/prisma/dev.db
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password123@shopsmart-db:5432/shopsmart
+    depends_on:
+      - shopsmart-db
     restart: unless-stopped
+
+  shopsmart-db:
+    image: postgres:16-alpine
+    container_name: shopsmart-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=shopsmart
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

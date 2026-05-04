@@ -48,7 +48,8 @@ resource "aws_ecs_task_definition" "app" {
       ]
       environment = [
         { name = "PORT", value = "5005" },
-        { name = "NODE_ENV", value = "production" }
+        { name = "NODE_ENV", value = "production" },
+        { name = "DATABASE_URL", value = "postgresql://${aws_db_instance.postgres.username}:${aws_db_instance.postgres.password}@${aws_db_instance.postgres.endpoint}/${aws_db_instance.postgres.db_name}" }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -58,27 +59,9 @@ resource "aws_ecs_task_definition" "app" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      mountPoints = [
-        {
-          sourceVolume  = "sqlite-data-volume"
-          containerPath = "/app/server/prisma"
-          readOnly      = false
-        }
-      ]
     }
   ])
 
-  volume {
-    name = "sqlite-data-volume"
-    efs_volume_configuration {
-      file_system_id          = aws_efs_file_system.sqlite_data.id
-      transit_encryption      = "ENABLED"
-      authorization_config {
-        access_point_id = aws_efs_access_point.sqlite_ap.id
-        iam             = "ENABLED"
-      }
-    }
-  }
 }
 
 # ECS Service
