@@ -19,6 +19,9 @@ app.get('/api/health', (req, res) => {
 // Book Routes
 app.use('/api/books', require('./routes/bookRoutes'));
 
+// Auth Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+
 // Root Route (optional, just to show something)
 app.get('/', (req, res) => {
   res.send('ShopSmart Backend Service');

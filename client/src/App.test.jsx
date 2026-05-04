@@ -25,7 +25,7 @@ describe('UserPage Component Testing', () => {
       {
         book_id: 1,
         book_name: 'The Pragmatic Programmer',
-        book_author: 'Andy & Dave',
+        book_author: 'Andy & dave',
         book_cost: 39.99,
         book_publication: 'Addison-Wesley',
         book_link: 'http://example.com',
