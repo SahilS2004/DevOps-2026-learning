@@ -17,3 +17,11 @@ model Book {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
