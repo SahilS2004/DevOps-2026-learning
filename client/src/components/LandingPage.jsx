@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, ArrowRight, Shield, Sparkles, Zap, Book } from 'lucide-react';
+import UserPage from './UserPage';
 
 export default function LandingPage() {
   return (
@@ -74,6 +75,11 @@ export default function LandingPage() {
               reading modal.
             </p>
           </div>
+        </div>
+
+        {/* Display the library grid below the features for a comprehensive experience */}
+        <div className="landing-books-preview" style={{ marginTop: '5rem' }}>
+          <UserPage />
         </div>
       </div>
     </div>
