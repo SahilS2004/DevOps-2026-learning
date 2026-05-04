@@ -110,8 +110,8 @@ jobs:
             cp server/prisma/dev.db server/prisma/dev.db.bak || true
             
             # 2. Force-sync with the latest repository state
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin ${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
             
             # 3. Restore the database if it was removed during sync
             if [ -f server/prisma/dev.db.bak ]; then
