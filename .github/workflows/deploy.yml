@@ -1,22 +1,72 @@
 name: AWS EC2 Continuous Deployment
 
-
-# Trigger deployment only on pushes to the main branch
 on:
   push:
     branches:
       - main
+      - developed
 
 jobs:
+  test:
+    name: Phase 1 - Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install & Run Server Tests
+        run: |
+          cd server
+          npm ci
+          npx prisma generate
+          npm run test
+
+      - name: Install & Run Client Tests
+        run: |
+          cd client
+          npm ci
+          npm run test
+
+  terraform:
+    name: Terraform Apply
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          cd terraform
+          terraform init
+          terraform validate
+          terraform plan
+          terraform apply -auto-approve
+
   deploy:
     name: Deploy to Production
+    needs: terraform
     runs-on: ubuntu-latest
 
     steps:
       - name: Execute Deployment Scripts via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          # These secrets must be defined in your GitHub Repository Settings!
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
