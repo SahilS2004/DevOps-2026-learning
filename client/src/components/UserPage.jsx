@@ -94,13 +94,16 @@ export default function UserPage() {
                   title={`Read ${readingBook.book_name}`}
                   className="reader-frame"
                 >
-                  <p>Your browser doesn't support iframes.</p>
+                  <p>Your browser doesn&apos;t support iframes.</p>
                 </iframe>
               ) : (
                 <div className="reader-no-document">
                   <AlertCircle size={48} color="#e11d48" style={{ marginBottom: '1rem' }} />
                   <h3>Document unavailable</h3>
-                  <p>This digital asset has not been uploaded to the database yet. Please check back later.</p>
+                  <p>
+                    This digital asset has not been uploaded to the database yet. Please check back
+                    later.
+                  </p>
                 </div>
               )}
             </div>

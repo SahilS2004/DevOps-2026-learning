@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import LandingPage from './components/LandingPage';
 import UserPage from './components/UserPage';
 import AdminPage from './components/AdminPage';
 import AuthPage from './components/AuthPage';
-import { Book, LayoutDashboard, Library, Sparkles, LogOut, User } from 'lucide-react';
+import { Book, LayoutDashboard, Library, LogOut } from 'lucide-react';
 
 function NavLinks() {
   const location = useLocation();
@@ -20,8 +20,8 @@ function NavLinks() {
   );
 }
 
-
-function App() {
+function LayoutWrapper() {
+  const location = useLocation();
   const [activeUser, setActiveUser] = useState(null);
 
   const fetchSession = () => {
@@ -42,52 +42,58 @@ function App() {
     window.dispatchEvent(new Event('storage'));
   };
 
-  if (!activeUser) {
+  const isLandingPage = location.pathname === '/';
+
+  if (isLandingPage) {
     return (
-      <BrowserRouter>
-        <div className="public-app-container">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
+      <div className="public-app-container">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+        </Routes>
+      </div>
     );
   }
 
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <aside className="sidebar">
-          <div>
-            <div className="brand">
-              <Book size={32} color="#38bdf8" /> DevLibrary
-            </div>
-            <NavLinks />
+    <div className="app-container">
+      <aside className="sidebar">
+        <div>
+          <div className="brand">
+            <Book size={32} color="#38bdf8" /> DevLibrary
           </div>
-          <div className="sidebar-footer">
+          <NavLinks />
+        </div>
+        <div className="sidebar-footer">
+          {activeUser ? (
             <div className="session-sidebar-card">
               <p className="session-user-email">Logged in as {activeUser.email}</p>
               <button onClick={handleLogout} className="btn-logout-sidebar">
                 <LogOut size={16} /> Logout
               </button>
             </div>
-          </div>
-        </aside>
+          ) : (
+            <p>&copy; 2026 DevLibrary</p>
+          )}
+        </div>
+      </aside>
 
-        <main className="main-content">
-          <div className="content-wrapper">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/browse" element={<UserPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="*" element={<Navigate to="/browse" replace />} />
-            </Routes>
-          </div>
-        </main>
-      </div>
+      <main className="main-content">
+        <div className="content-wrapper">
+          <Routes>
+            <Route path="/browse" element={<UserPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <LayoutWrapper />
     </BrowserRouter>
   );
 }

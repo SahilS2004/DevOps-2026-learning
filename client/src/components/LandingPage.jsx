@@ -27,7 +27,8 @@ export default function LandingPage() {
             Explore the Ultimate <span>Digital Library</span>
           </h1>
           <p className="landing-subtitle">
-            Discover a curated ecosystem of cutting-edge documentation, developer guides, and premium resources tailored for engineering excellence.
+            Discover a curated ecosystem of cutting-edge documentation, developer guides, and
+            premium resources tailored for engineering excellence.
           </p>
 
           <div className="landing-cta-group">
@@ -46,7 +47,10 @@ export default function LandingPage() {
               <BookOpen size={24} />
             </div>
             <h3>Vast Collection</h3>
-            <p>Read full books and official documentation seamlessly in high definition directly within your screen.</p>
+            <p>
+              Read full books and official documentation seamlessly in high definition directly
+              within your screen.
+            </p>
           </div>
 
           <div className="landing-feature-card">
@@ -54,7 +58,10 @@ export default function LandingPage() {
               <Shield size={24} />
             </div>
             <h3>Secure Authentication</h3>
-            <p>Create an account to securely access documents, track updates, and view premium materials.</p>
+            <p>
+              Create an account to securely access documents, track updates, and view premium
+              materials.
+            </p>
           </div>
 
           <div className="landing-feature-card">
@@ -62,7 +69,10 @@ export default function LandingPage() {
               <Zap size={24} />
             </div>
             <h3>Live Popup Reader</h3>
-            <p>Don't just open links—experience deep focus reading mode inside our responsive reading modal.</p>
+            <p>
+              Don&apos;t just open links—experience deep focus reading mode inside our responsive
+              reading modal.
+            </p>
           </div>
         </div>
       </div>

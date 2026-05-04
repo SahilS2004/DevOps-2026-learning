@@ -64,7 +64,10 @@ export default function AuthPage() {
 
   if (activeUser) {
     return (
-      <div className="auth-card" style={{ maxWidth: '480px', margin: '4rem auto', textAlign: 'center' }}>
+      <div
+        className="auth-card"
+        style={{ maxWidth: '480px', margin: '4rem auto', textAlign: 'center' }}
+      >
         <div className="auth-header">
           <ShieldCheck size={48} color="#38bdf8" style={{ margin: '0 auto 1rem auto' }} />
           <h2>Welcome, {activeUser.email}</h2>
@@ -99,7 +102,11 @@ export default function AuthPage() {
 
         <div className="auth-body">
           <h3>{isLogin ? 'Welcome Back' : 'Get Started with DevLibrary'}</h3>
-          <p>{isLogin ? 'Sign in to access your digital library.' : 'Sign up to read complete documents.'}</p>
+          <p>
+            {isLogin
+              ? 'Sign in to access your digital library.'
+              : 'Sign up to read complete documents.'}
+          </p>
 
           <form onSubmit={handleAuth} className="auth-form">
             <div className="input-group-auth">
