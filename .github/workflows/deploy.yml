@@ -184,11 +184,23 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Render task definition with the new image
         env:
           ECS_TASK_DEFINITION_FAMILY: ${{ needs.terraform.outputs.ecs_task_definition_family }}
-          IMAGE_URI: ${{ needs.build.outputs.image_uri }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          if [ -z "$IMAGE_URI" ] || [ "$IMAGE_URI" = "/:$IMAGE_TAG" ]; then
+            echo "Resolved IMAGE_URI is invalid: '$IMAGE_URI'"
+            exit 1
+          fi
+
           aws ecs describe-task-definition --task-definition "$ECS_TASK_DEFINITION_FAMILY" --query taskDefinition > task-definition.json
           jq --arg IMAGE_URI "$IMAGE_URI" '
             .containerDefinitions[0].image = $IMAGE_URI
@@ -202,6 +214,7 @@ jobs:
                 .registeredBy
               )
           ' task-definition.json > task-definition-rendered.json
+          jq '.containerDefinitions[0].image' task-definition-rendered.json
 
       - name: Register new task definition revision
         id: register-task-def
