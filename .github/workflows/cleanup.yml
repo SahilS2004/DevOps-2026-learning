@@ -57,6 +57,42 @@ jobs:
             echo "EFS File System not found or already deleted."
           fi
           
-      - name: Terraform Destroy (Optional Fallback)
+      - name: Delete Orphaned RDS Database
         run: |
-          echo "Cleanup complete! If you have state bucket issues, you can run terraform destroy later."
+          echo "Attempting to delete RDS instance shopsmart-db..."
+          aws rds delete-db-instance --db-instance-identifier shopsmart-db --skip-final-snapshot || echo "RDS instance not found or already deleted."
+
+      - name: Delete Orphaned ALB
+        run: |
+          echo "Looking for ALB shopsmart-alb..."
+          ALB_ARN=$(aws elbv2 describe-load-balancers --names shopsmart-alb --query "LoadBalancers[0].LoadBalancerArn" --output text 2>/dev/null || echo "None")
+          if [ "$ALB_ARN" != "None" ] && [ "$ALB_ARN" != "null" ]; then
+            echo "Deleting ALB: $ALB_ARN"
+            aws elbv2 delete-load-balancer --load-balancer-arn $ALB_ARN || echo "Failed to delete ALB."
+          else
+            echo "ALB not found."
+          fi
+
+      - name: Delete Orphaned ALB Target Group
+        run: |
+          echo "Looking for Target Group shopsmart-tg..."
+          TG_ARN=$(aws elbv2 describe-target-groups --names shopsmart-tg --query "TargetGroups[0].TargetGroupArn" --output text 2>/dev/null || echo "None")
+          if [ "$TG_ARN" != "None" ] && [ "$TG_ARN" != "null" ]; then
+            echo "Deleting Target Group: $TG_ARN"
+            aws elbv2 delete-target-group --target-group-arn $TG_ARN || echo "Failed to delete Target Group."
+          else
+            echo "Target Group not found."
+          fi
+
+      - name: Delete Terraform State Bucket (Fix Corrupted State)
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          STATE_BUCKET="shopsmart-tf-state-${ACCOUNT_ID}"
+          echo "Attempting to empty and delete Terraform state bucket: $STATE_BUCKET..."
+          # Empty the bucket first (including all versions if versioning was enabled)
+          aws s3api delete-objects --bucket "$STATE_BUCKET" \
+            --delete "$(aws s3api list-object-versions --bucket "$STATE_BUCKET" --output=json --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}' 2>/dev/null)" 2>/dev/null || echo "Bucket already empty or no versions."
+          aws s3api delete-objects --bucket "$STATE_BUCKET" \
+            --delete "$(aws s3api list-object-versions --bucket "$STATE_BUCKET" --output=json --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}' 2>/dev/null)" 2>/dev/null || echo "No delete markers."
+          aws s3 rb s3://$STATE_BUCKET --force || echo "State bucket not found or already deleted."
+          echo "Cleanup complete! You now have a perfectly clean slate."
