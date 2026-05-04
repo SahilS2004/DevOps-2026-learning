@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { UploadCloud, FileText, Edit2, X, Trash2 } from 'lucide-react';
+import { API_BASE_URL } from '../lib/api';
 
 export default function AdminPage() {
   const [books, setBooks] = useState([]);
@@ -15,7 +16,7 @@ export default function AdminPage() {
   const fileInputRef = useRef(null);
 
   const fetchBooks = () => {
-    fetch(`${import.meta.env.VITE_API_URL}/books`)
+    fetch(`${API_BASE_URL}/books`)
       .then((res) => res.json())
       .then((data) => setBooks(data));
   };
@@ -55,7 +56,7 @@ export default function AdminPage() {
         data.append('book_publication', formData.book_publication);
         data.append('book_cost', formData.book_cost);
 
-        await fetch(`${import.meta.env.VITE_API_URL}/books/${editingBook.book_id}`, {
+        await fetch(`${API_BASE_URL}/books/${editingBook.book_id}`, {
           method: 'PUT',
           body: data,
         });
@@ -64,7 +65,7 @@ export default function AdminPage() {
         if (file) {
           const fileData = new FormData();
           fileData.append('book_file', file);
-          await fetch(`${import.meta.env.VITE_API_URL}/books/${editingBook.book_id}/upload`, {
+          await fetch(`${API_BASE_URL}/books/${editingBook.book_id}/upload`, {
             method: 'POST',
             body: fileData,
           });
@@ -77,7 +78,7 @@ export default function AdminPage() {
         data.append('book_publication', formData.book_publication);
         data.append('book_cost', formData.book_cost);
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/books`, {
+        const res = await fetch(`${API_BASE_URL}/books`, {
           method: 'POST',
           body: data,
         });
@@ -88,7 +89,7 @@ export default function AdminPage() {
         if (file) {
           const fileData = new FormData();
           fileData.append('book_file', file);
-          await fetch(`${import.meta.env.VITE_API_URL}/books/${newBook.book_id}/upload`, {
+          await fetch(`${API_BASE_URL}/books/${newBook.book_id}/upload`, {
             method: 'POST',
             body: fileData,
           });
@@ -107,7 +108,7 @@ export default function AdminPage() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this book?')) return;
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/books/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/books/${id}`, { method: 'DELETE' });
       fetchBooks();
     } catch (err) {
       console.error(err);

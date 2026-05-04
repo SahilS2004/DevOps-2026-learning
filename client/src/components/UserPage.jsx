@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ExternalLink, User, Calendar, X, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../lib/api';
 
 export default function UserPage() {
   const [books, setBooks] = useState([]);
@@ -7,7 +8,7 @@ export default function UserPage() {
   const [readingBook, setReadingBook] = useState(null);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/books`)
+    fetch(`${API_BASE_URL}/books`)
       .then((res) => res.json())
       .then((data) => {
         setBooks(data);

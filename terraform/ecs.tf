@@ -24,6 +24,10 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
   retention_in_days = 7
 }
 
+locals {
+  database_url = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.postgres.address}:5432/${var.db_name}"
+}
+
 # ECS Task Definition
 resource "aws_ecs_task_definition" "app" {
   family                   = "shopsmart-app-task"
@@ -41,15 +45,15 @@ resource "aws_ecs_task_definition" "app" {
       essential = true
       portMappings = [
         {
-          containerPort = 5005
-          hostPort      = 5005
+          containerPort = var.app_port
+          hostPort      = var.app_port
           protocol      = "tcp"
         }
       ]
       environment = [
-        { name = "PORT", value = "5005" },
+        { name = "PORT", value = tostring(var.app_port) },
         { name = "NODE_ENV", value = "production" },
-        { name = "DATABASE_URL", value = "postgresql://${aws_db_instance.postgres.username}:${aws_db_instance.postgres.password}@${aws_db_instance.postgres.endpoint}/${aws_db_instance.postgres.db_name}" }
+        { name = "DATABASE_URL", value = local.database_url }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -66,12 +70,18 @@ resource "aws_ecs_task_definition" "app" {
 
 # ECS Service
 resource "aws_ecs_service" "app_service" {
-  name            = "shopsmart-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-  health_check_grace_period_seconds = 120
+  name                               = "shopsmart-service"
+  cluster                            = aws_ecs_cluster.main.id
+  task_definition                    = aws_ecs_task_definition.app.arn
+  desired_count                      = 1
+  launch_type                        = "FARGATE"
+  health_check_grace_period_seconds  = 120
+  deployment_minimum_healthy_percent = 0
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   network_configuration {
     subnets          = [aws_subnet.public_1.id, aws_subnet.public_2.id]
@@ -82,11 +92,11 @@ resource "aws_ecs_service" "app_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
     container_name   = "shopsmart-container"
-    container_port   = 5005
+    container_port   = var.app_port
   }
 
   # Ensure the service can be recreated if task def changes
   force_new_deployment = true
-  
+
   depends_on = [aws_lb_listener.http]
 }

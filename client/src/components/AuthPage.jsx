@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, LogIn, Mail, Lock, ShieldCheck } from 'lucide-react';
+import { API_BASE_URL } from '../lib/api';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,7 +18,7 @@ export default function AuthPage() {
     setSuccess('');
     setLoading(true);
 
-    const url = `${import.meta.env.VITE_API_URL}/auth/${isLogin ? 'login' : 'signup'}`;
+    const url = `${API_BASE_URL}/auth/${isLogin ? 'login' : 'signup'}`;
 
     try {
       const res = await fetch(url, {

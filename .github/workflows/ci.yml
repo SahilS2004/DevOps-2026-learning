@@ -2,35 +2,59 @@ name: CI Pipeline
 
 on:
   push:
+    branches-ignore:
+      - main
+      - developed
   pull_request:
 
 jobs:
   backend-ci:
     name: Backend CI
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: shopsmart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: ./server
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
           cache-dependency-path: './server/package-lock.json'
-          
+
       - name: Install Dependencies
         run: npm ci
-        
+
       - name: Generate Prisma Client
         run: npx prisma generate
-        
+
+      - name: Apply Prisma Migrations
+        env:
+          DATABASE_URL: 'postgresql://postgres:password123@localhost:5432/shopsmart'
+        run: npx prisma migrate deploy
+
       - name: Run Linter
         run: npm run lint
-        
+
       - name: Run Tests
+        env:
+          DATABASE_URL: 'postgresql://postgres:password123@localhost:5432/shopsmart'
         run: npm run test
 
   frontend-ci:
@@ -41,20 +65,20 @@ jobs:
         working-directory: ./client
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
           cache-dependency-path: './client/package-lock.json'
-          
+
       - name: Install Dependencies
         run: npm ci
-        
+
       - name: Run Linter
         run: npm run lint
-        
+
       - name: Run Tests
         # Vite's vitest automatically detects the GitHub Actions CI environment
         # and runs in non-watch (single run) mode by default.
@@ -63,38 +87,52 @@ jobs:
   e2e-ci:
     name: End-to-End Tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: shopsmart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          
+
       - name: Install Server Dependencies
         env:
-          DATABASE_URL: "file:./dev.db"
+          DATABASE_URL: 'postgresql://postgres:password123@localhost:5432/shopsmart'
         run: |
           cd server
           npm ci
           npx prisma generate
-          npx prisma db push --accept-data-loss
-          
+          npx prisma migrate deploy
+
       - name: Install Client Dependencies
         run: |
           cd client
           npm ci
-          
+
       - name: Install Playwright Browsers
         run: |
           cd client
           npx playwright install --with-deps chromium
-          
+
       - name: Run Playwright E2E
         env:
           PORT: 5005
-          DATABASE_URL: "file:./dev.db"
-          VITE_API_URL: "http://localhost:5005/api"
+          DATABASE_URL: 'postgresql://postgres:password123@localhost:5432/shopsmart'
+          VITE_API_URL: '/api'
         run: |
           cd client
           npm run e2e

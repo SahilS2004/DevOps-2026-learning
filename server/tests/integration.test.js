@@ -13,7 +13,7 @@ describe('API + DB System Integration', () => {
     }
 
     // 2. Synchronize the Prisma schema strictly to the dedicated SQLite testing database
-    execSync('npx prisma db push --accept-data-loss', { stdio: 'ignore' });
+    execSync('npx prisma migrate deploy', { stdio: 'ignore' });
 
     prisma = new PrismaClient();
     await prisma.book.deleteMany();
