@@ -76,8 +76,6 @@ export default function LandingPage() {
             </p>
           </div>
         </div>
-
-        {/* Display the library grid below the features for a comprehensive experience */}
         <div className="landing-books-preview" style={{ marginTop: '5rem' }}>
           <UserPage />
         </div>
