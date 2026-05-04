@@ -72,7 +72,24 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           cd terraform
-          terraform init
+          # Fetch AWS Account ID to create a globally unique state bucket
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          STATE_BUCKET="shopsmart-tf-state-${ACCOUNT_ID}"
+          
+          # Check if the state bucket exists, if not, create it
+          if ! aws s3api head-bucket --bucket "$STATE_BUCKET" 2>/dev/null; then
+            echo "Creating Terraform state bucket: $STATE_BUCKET"
+            aws s3api create-bucket --bucket "$STATE_BUCKET" --region ${{ secrets.AWS_REGION }} $(if [ "${{ secrets.AWS_REGION }}" != "us-east-1" ]; then echo "--create-bucket-configuration LocationConstraint=${{ secrets.AWS_REGION }}"; fi)
+            # Enable versioning on the state bucket
+            aws s3api put-bucket-versioning --bucket "$STATE_BUCKET" --versioning-configuration Status=Enabled
+          fi
+          
+          echo "Initializing Terraform with S3 backend..."
+          terraform init \
+            -backend-config="bucket=${STATE_BUCKET}" \
+            -backend-config="key=shopsmart/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}"
+            
           terraform validate
           terraform plan
           terraform apply -auto-approve

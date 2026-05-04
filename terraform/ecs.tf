@@ -95,6 +95,14 @@ resource "aws_ecs_service" "app_service" {
     assign_public_ip = true
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "shopsmart-container"
+    container_port   = 5005
+  }
+
   # Ensure the service can be recreated if task def changes
   force_new_deployment = true
+  
+  depends_on = [aws_lb_listener.http]
 }

@@ -62,17 +62,38 @@ resource "aws_route_table_association" "public_2" {
   route_table_id = aws_route_table.public.id
 }
 
-# Security Group for ECS Task
-resource "aws_security_group" "ecs_tasks" {
-  name        = "shopsmart-ecs-tasks-sg"
-  description = "Allow inbound access on port 5005"
+# Security Group for ALB
+resource "aws_security_group" "alb_sg" {
+  name        = "shopsmart-alb-sg"
+  description = "Allow inbound HTTP access to ALB"
   vpc_id      = aws_vpc.main.id
 
   ingress {
     protocol    = "tcp"
-    from_port   = 5005
-    to_port     = 5005
+    from_port   = 80
+    to_port     = 80
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Security Group for ECS Task
+resource "aws_security_group" "ecs_tasks" {
+  name        = "shopsmart-ecs-tasks-sg"
+  description = "Allow inbound access from ALB on port 5005"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    protocol        = "tcp"
+    from_port       = 5005
+    to_port         = 5005
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   egress {
