@@ -83,6 +83,8 @@ jobs:
           ECR_REPOSITORY: "shopsmart-server"
           IMAGE_TAG: "latest"
         run: |
+          # Check and create the ECR repository if it does not exist
+          aws ecr describe-repositories --repository-names $ECR_REPOSITORY || aws ecr create-repository --repository-name $ECR_REPOSITORY
           # Build a docker container and push it to ECR so that it can be deployed to ECS
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
