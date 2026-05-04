@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  shopsmart-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shopsmart-app
+    ports:
+      - "5005:5005"
+    environment:
+      - PORT=5005
+      - NODE_ENV=production
+      # Add other necessary env variables like AWS_REGION, S3_BUCKET_NAME etc.
+    volumes:
+      - ./server/prisma/dev.db:/app/server/prisma/dev.db
+    restart: unless-stopped

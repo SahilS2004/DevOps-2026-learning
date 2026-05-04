@@ -1,6 +1,6 @@
 # 1. Bucket Resource with unique name
 resource "aws_s3_bucket" "library_bucket" {
-  bucket        = "dev-lib-ops-shopsmart-unique"
+  bucket        = "dev-lib-ops-1"
   force_destroy = true
 }
 

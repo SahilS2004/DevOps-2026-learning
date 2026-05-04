@@ -1,4 +1,4 @@
-name: AWS EC2 Continuous Deployment
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,11 +6,14 @@ on:
       - main
       - developed
 
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: "shopsmart-app"
+
 jobs:
   test:
-    name: Testing
+    name: Phase 1 - Testing
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -26,30 +29,47 @@ jobs:
           npm ci
           npx prisma generate
           npm run test
+      
+      - name: Server Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-test-report
+          path: server/coverage/
+          # Assuming jest is configured to generate coverage
 
       - name: Install & Run Client Tests
         run: |
           cd client
           npm ci
           npm run test
+          
+      - name: Client Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-test-report
+          path: client/coverage/
 
   terraform:
-    name: Terraform Apply
+    name: Phase 2 - Infrastructure Provisioning
     needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init & Apply
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           cd terraform
           terraform init
@@ -57,8 +77,8 @@ jobs:
           terraform plan
           terraform apply -auto-approve
 
-  ecs_deployment:
-    name: ECS Deployment
+  build-and-deploy:
+    name: Phase 3 - Container Build and ECS Deployment
     needs: terraform
     runs-on: ubuntu-latest
     steps:
@@ -70,73 +90,23 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Docker Image to ECR
+      - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: "shopsmart-server"
-          IMAGE_TAG: "latest"
+          IMAGE_TAG: latest
         run: |
-          # Check and create the ECR repository if it does not exist
-          aws ecr describe-repositories --repository-names $ECR_REPOSITORY || aws ecr create-repository --repository-name $ECR_REPOSITORY
-          # Build a docker container and push it to ECR so that it can be deployed to ECS
+          # Build Docker image
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          # Push image to ECR
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-  deploy:
-    name: Deploy to Production
-    needs: terraform
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Execute Deployment Scripts via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e # Exit immediately if any command fails
-            echo "🚀 Starting Deployment on AWS EC2..."
-            
-            cd ~/DevOps-2026-learning
-            
-            # 1. Safety Backup: Prevent dev.db from being deleted during the git reset
-            echo "💾 Backing up database..."
-            cp server/prisma/dev.db server/prisma/dev.db.bak || true
-            
-            # 2. Force-sync with the latest repository state
-            git fetch origin ${{ github.ref_name }}
-            git reset --hard origin/${{ github.ref_name }}
-            
-            # 3. Restore the database if it was removed during sync
-            if [ -f server/prisma/dev.db.bak ]; then
-              echo "🩹 Restoring database..."
-              mv server/prisma/dev.db.bak server/prisma/dev.db
-            fi
-            
-            # 4. Securely build and restart the Backend (Server)
-            echo "📦 Building Backend..."
-            cd server
-            npm ci
-            npx prisma generate
-            npx prisma db push --accept-data-loss
-            
-            # Restart PM2 process (assumes you started it earlier with pm2 start src/index.js --name "backend")
-            pm2 restart backend || pm2 start src/index.js --name "backend"
-            
-            # 4. Securely build the Frontend (Client)
-            echo "📦 Building Frontend..."
-            cd ../client
-            npm ci
-            npm run build
-            
-            # (If you serve the client using Nginx, adjusting the build folder is native and automatic)
-            
-            echo "✅ Deployment Successful!"
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service --cluster shopsmart-cluster --service shopsmart-service --force-new-deployment
+          aws ecs wait services-stable --cluster shopsmart-cluster --services shopsmart-service
