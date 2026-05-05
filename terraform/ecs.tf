@@ -53,7 +53,9 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
         { name = "PORT", value = tostring(var.app_port) },
         { name = "NODE_ENV", value = "production" },
-        { name = "DATABASE_URL", value = local.database_url }
+        { name = "DATABASE_URL", value = local.database_url },
+        { name = "AWS_REGION", value = var.aws_region },
+        { name = "AWS_S3_BUCKET_NAME", value = aws_s3_bucket.library_bucket.id }
       ]
       logConfiguration = {
         logDriver = "awslogs"
